@@ -23,7 +23,7 @@ module Knock
 
   private
     def secret_key
-      Knock.token_secret_signature_key.call
+      Knock.token_secret_signature_key.call(@request)
     end
 
     def decode_key
@@ -50,7 +50,7 @@ module Knock
     end
 
     def token_audience
-      verify_audience? && Knock.token_audience.call
+      verify_audience? && Knock.token_audience.call(@request)
     end
 
     def verify_audience?
