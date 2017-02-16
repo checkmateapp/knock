@@ -2,12 +2,13 @@ require 'jwt'
 
 module Knock
   class AuthToken
-    attr_reader :token
+    attr_reader :token, :request
 
-    def initialize payload: {}, token: nil
+    def initialize payload: {}, token: nil, request: nil
       if token.present?
         @payload, _ = JWT.decode token, decode_key, true, options
         @token = token
+        @request = request
       else
         @payload = payload
         @token = JWT.encode claims.merge(payload),
