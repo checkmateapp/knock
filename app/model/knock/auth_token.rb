@@ -23,6 +23,7 @@ module Knock
 
   private
     def secret_key
+      Rails.logger.info @request
       Knock.token_secret_signature_key.call(@request)
     end
 
