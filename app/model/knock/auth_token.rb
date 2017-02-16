@@ -23,8 +23,7 @@ module Knock
 
   private
     def secret_key
-      Rails.logger.info @request
-      Knock.token_secret_signature_key.call(@request)
+      Knock.token_secret_signature_key.call(@request.dup)
     end
 
     def decode_key
