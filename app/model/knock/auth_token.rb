@@ -23,7 +23,7 @@ module Knock
 
   private
     def secret_key
-      Knock.token_secret_signature_key.call(@request.dup)
+      Knock.token_secret_signature_key.call(@request)
     end
 
     def decode_key
