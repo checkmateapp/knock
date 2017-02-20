@@ -3,23 +3,32 @@ require 'jwt'
 module Knock
   class AuthToken
     attr_reader :token
-    attr_accessor :request
+    attr_reader :payload
+    attr_reader :request
 
-    def initialize payload: {}, token: nil, request: nil
+    def initialize payload: {}, token: nil, verify_options: {}, request: nil
       if token.present?
         @request = request
-        @payload, _ = JWT.decode token, decode_key, true, options
+        @payload, _ = JWT.decode token, decode_key, true, options.merge(verify_options)
         @token = token
       else
-        @payload = payload
-        @token = JWT.encode claims.merge(payload),
+        @payload = claims.merge(payload)
+        @token = JWT.encode @payload,
           secret_key,
           Knock.token_signature_algorithm
       end
     end
 
-    def current_user
-      @current_user ||= Knock.current_user_from_token.call @payload
+    def entity_for entity_class
+      if entity_class.respond_to? :from_token_payload
+        entity_class.from_token_payload @payload
+      else
+        entity_class.find @payload['sub']
+      end
+    end
+
+    def to_json options = {}
+      {jwt: @token}.to_json
     end
 
   private
@@ -38,15 +47,25 @@ module Knock
     end
 
     def claims
-      {
-        exp: Knock.token_lifetime.from_now.to_i,
-        aud: token_audience
-      }
+      _claims = {}
+      _claims[:exp] = token_lifetime if verify_lifetime?
+      _claims[:aud] = token_audience if verify_audience?
+      _claims
+    end
+
+    def token_lifetime
+      Knock.token_lifetime.from_now.to_i if verify_lifetime?
+    end
+
+    def verify_lifetime?
+      !Knock.token_lifetime.nil?
     end
 
     def verify_claims
       {
-        aud: token_audience, verify_aud: verify_audience?
+        aud: token_audience,
+        verify_aud: verify_audience?,
+        verify_expiration: verify_lifetime?
       }
     end
 

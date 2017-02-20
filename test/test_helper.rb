@@ -1,5 +1,6 @@
-require "codeclimate-test-reporter"
-CodeClimate::TestReporter.start
+require 'simplecov'
+
+SimpleCov.start
 
 # Configure Rails Environment
 ENV["RAILS_ENV"] = "test"
@@ -22,6 +23,11 @@ if ActiveSupport::TestCase.respond_to?(:fixture_path=)
   ActiveSupport::TestCase.fixtures :all
 end
 
+module Knock
+  class MyCustomException < StandardError
+  end
+end
+
 # Make sure knock global configuration is reset before every tests
 # to avoid order dependent failures.
 class ActiveSupport::TestCase
@@ -34,5 +40,6 @@ class ActiveSupport::TestCase
     Knock.token_secret_signature_key = -> { Rails.application.secrets.secret_key_base }
     Knock.token_public_key = nil
     Knock.token_audience = nil
+    Knock.token_lifetime = 1.day
   end
 end
